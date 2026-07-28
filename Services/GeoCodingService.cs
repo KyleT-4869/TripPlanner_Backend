@@ -2,6 +2,7 @@ using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using TripPlanner.DTO;
 
 namespace TripPlanner.Services;
@@ -37,17 +38,12 @@ public class GeoCodingService
 
         List<NominatimResult>? startResult = await StartResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
         List<NominatimResult>? destResult = await destinationResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
-
-        // startResult.ForEach(result => result.Print());
-        // destResult.ForEach(result => result.Print());
+        
 
         NominatimResult start = startResult![0];
         NominatimResult dest = destResult![0];
 
         await callOpenRoute(start, dest);
-
-        // start.Print();
-        // dest.Print();
 
         return "Hello";
     }
@@ -55,23 +51,13 @@ public class GeoCodingService
     public async Task<string> callOpenRoute(NominatimResult startResult, NominatimResult destResult)
     {
         string orsUrl = $"{openRouteUrl}api_key={_apiKey}&start={startResult.lon},{startResult.lat}&end={destResult.lon},{destResult.lat}";
-        Console.WriteLine(orsUrl);
 
         using HttpResponseMessage response = await client.GetAsync(orsUrl);
-        var responseText = await response.Content.ReadAsStringAsync();
+        string stringResponse = await response.Content.ReadAsStringAsync();
+        JsonNode orsJson = JsonNode.Parse(stringResponse)!;
+        OpenRouteResult orsResult = new OpenRouteResult(orsJson);
+        orsResult.Print();
 
-        using JsonDocument document = JsonDocument.Parse(responseText);
-        string readableJson = JsonSerializer.Serialize(
-            document,
-            new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }
-        );
-
-        await File.WriteAllTextAsync("ors-response.json", readableJson);
-
-        Console.WriteLine("response saved to json file");
 
         return "Hello";
     }
