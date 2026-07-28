@@ -4,6 +4,8 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TripPlanner.DTO;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace TripPlanner.Services;
 public class GeoCodingService
@@ -25,40 +27,56 @@ public class GeoCodingService
         _apiKey = config["ORS:ApiKey"]!;
     }
 
-    public async Task<string> CallNominatim(string startAddress, string destination) 
+    public async Task<OpenRouteResult?> CallNominatim(string startAddress, string destination) 
     {   
         string startUrl = $"{nominatimUrl}{startAddress}{parameters}";
         string destinationUrl = $"{nominatimUrl}{destination}{parameters}";
-        Console.WriteLine(startUrl);
-        Console.WriteLine(destinationUrl);
 
-        using HttpResponseMessage StartResponse = await client.GetAsync(startUrl);
-        await Task.Delay(1000);
-        using HttpResponseMessage destinationResponse = await client.GetAsync(destinationUrl);
+        try
+        {
+            using HttpResponseMessage startUrlResponse = await client.GetAsync(startUrl);
+            startUrlResponse.EnsureSuccessStatusCode();
 
-        List<NominatimResult>? startResult = await StartResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
-        List<NominatimResult>? destResult = await destinationResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
-        
+            await Task.Delay(1000);
 
-        NominatimResult start = startResult![0];
-        NominatimResult dest = destResult![0];
+            using HttpResponseMessage destinationUrlResponse = await client.GetAsync(destinationUrl);
+            destinationUrlResponse.EnsureSuccessStatusCode();
 
-        await callOpenRoute(start, dest);
+            List<NominatimResult>? startResult = await startUrlResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
+            List<NominatimResult>? destResult = await destinationUrlResponse.Content.ReadFromJsonAsync<List<NominatimResult>>();
 
-        return "Hello";
+            NominatimResult start = startResult![0];
+            NominatimResult dest = destResult![0];
+
+            OpenRouteResult? orsResult = await callOpenRoute(start, dest);
+            return orsResult;
+        }
+        catch(HttpRequestException e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+            
+        }
     }
 
-    public async Task<string> callOpenRoute(NominatimResult startResult, NominatimResult destResult)
+    public async Task<OpenRouteResult?> callOpenRoute(NominatimResult startResult, NominatimResult destResult)
     {
         string orsUrl = $"{openRouteUrl}api_key={_apiKey}&start={startResult.lon},{startResult.lat}&end={destResult.lon},{destResult.lat}";
+        try
+        {
+            using HttpResponseMessage response = await client.GetAsync(orsUrl);
+            response.EnsureSuccessStatusCode();
 
-        using HttpResponseMessage response = await client.GetAsync(orsUrl);
-        string stringResponse = await response.Content.ReadAsStringAsync();
-        JsonNode orsJson = JsonNode.Parse(stringResponse)!;
-        OpenRouteResult orsResult = new OpenRouteResult(orsJson);
-        orsResult.Print();
+            string stringResponse = await response.Content.ReadAsStringAsync();
+            JsonNode orsJson = JsonNode.Parse(stringResponse)!;
+            OpenRouteResult orsResult = new OpenRouteResult(orsJson);
 
-
-        return "Hello";
+            return orsResult;
+        }
+        catch(HttpRequestException e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
     }
 }
