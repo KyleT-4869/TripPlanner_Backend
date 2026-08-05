@@ -4,13 +4,13 @@ using System.Text.Json.Serialization;
 
 namespace TripPlanner.DTO;
 
-public class OpenRouteResult
+public class RoutingData
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
-    public OpenRouteResult(JsonNode orsJson)
+    public RoutingData(JsonNode orsJson)
     {
         this.BoundingBox = orsJson["bbox"]!.Deserialize<List<double>>()!;
         this.Steps = orsJson["features"]![0]!["properties"]!["segments"]![0]!["steps"]!.Deserialize<List<Step>>(JsonOptions)!;
