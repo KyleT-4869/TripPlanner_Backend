@@ -22,8 +22,6 @@ public class RoutingData
     public Summary Summary {get; set;}
     public Geometry Geometry {get; set;}
 
-    
-
     public void Print()
     {
         Console.WriteLine($"Bounding Box: {BoundingBox[0]}");

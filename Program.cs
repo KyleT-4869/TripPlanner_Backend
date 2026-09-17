@@ -31,26 +31,26 @@ var app = builder.Build();
 app.UseCors("FrontendPolicy");
 
 app.MapGet("/", () => "Hello World!");
-app.MapGet("/amenity", async () =>
-{
-    using HttpClient client = new HttpClient();
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("TripPlanner/1.0 (kyletruong2000@gmail.com)"); 
-    var service = new AmenitiesService(client);
-    List<Double> boundingBox = new List<Double>()
-    {
-        -118.372709,
-        34.110412,
-        -118.271662,
-        34.221766
-    };
-    List<string> amenityRequest = new List<string>()
-    {
-        "restaurant"
-    };
+// app.MapGet("/amenity", async () =>
+// {
+//     using HttpClient client = new HttpClient();
+//     client.DefaultRequestHeaders.UserAgent.ParseAdd("TripPlanner/1.0 (kyletruong2000@gmail.com)"); 
+//     var service = new AmenitiesService(client);
+//     List<Double> boundingBox = new List<Double>()
+//     {
+//         -118.372709,
+//         34.110412,
+//         -118.271662,
+//         34.221766
+//     };
+//     List<string> amenityRequest = new List<string>()
+//     {
+//         "restaurant"
+//     };
 
-    await service.getAmenitiesData(boundingBox, amenityRequest);
-    return Results.Ok();
+//     await service.getAmenitiesData(boundingBox, amenityRequest);
+//     return Results.Ok();
 
-});
+// });
 app.MapControllers();
 app.Run();
