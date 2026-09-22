@@ -23,11 +23,26 @@ public class RouteHandlingController : ControllerBase
     {
         GeoCodingData? originGeoData = await _geoCodingService.GetGeoCodingData(origin);
 
+        if(originGeoData == null)
+        {
+            return BadRequest("Unable to location origin location");
+        }
+
         await Task.Delay(1000);
 
         GeoCodingData? destGeoData = await _geoCodingService.GetGeoCodingData(dest);
 
+        if(destGeoData == null)
+        {
+            return BadRequest("Unable to locate dest location");
+        }
+
         RoutingData? routeData = await _routeService.GetRouteInformation(originGeoData!, destGeoData!);
+        
+        if(routeData == null)
+        {
+            return BadRequest("Unable to set route from the information provided");
+        }
 
         return Ok(routeData);
 

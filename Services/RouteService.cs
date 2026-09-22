@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TripPlanner.DTO;
 
@@ -27,12 +28,23 @@ public class RouteService {
             response.EnsureSuccessStatusCode();
 
             string stringResponse = await response.Content.ReadAsStringAsync();
+
+            if(stringResponse == null)
+            {
+                return null;
+            }
+            
             JsonNode orsJson = JsonNode.Parse(stringResponse)!;
             RoutingData orsResult = new RoutingData(orsJson);
 
             return orsResult;
         }
         catch(HttpRequestException e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
+        catch(JsonException e)
         {
             Console.WriteLine(e.Message);
             return null;
