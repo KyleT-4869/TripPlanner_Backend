@@ -1,4 +1,5 @@
 
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -16,10 +17,7 @@ public class AmenitiesService
         _client = client;
     }
 
-    public async Task<List<AmenityData>?> getAmenitiesData(List<Double> boundingBox, 
-                                                           List<string> amenityRequest, 
-                                                           List<GeoCodingData> geoCodeData
-                                                          )
+    public async Task<List<AmenityData>?> getAmenitiesData(List<Double> boundingBox, List<string> amenityRequest, List<GeoCodingData> geoCodeData)
     {
         string query = $"[bbox:{boundingBox[1]}, {boundingBox[0]},{boundingBox[3]}, {boundingBox[2]}][out:json][timeout:25]; (";
         foreach(string amenity in amenityRequest)
@@ -64,6 +62,8 @@ public class AmenitiesService
             Console.WriteLine(amenityData[0].Lat);
             Console.WriteLine(amenityData[0].Lon);
 
+            amenityData.Sort((a,b) => a.DistanceToStart.CompareTo(b.DistanceToStart));
+
             return amenityData;
            
         } 
@@ -86,12 +86,12 @@ public class AmenitiesService
             double dLat = (Math.PI / 180) * (lat2 - lat1);
             double dLon = (Math.PI / 180) * (lon2 - lon1);
 
-            lat1 = (Math.PI / 180) * (lat1);
-            lat2 = (Math.PI / 180) * (lat2);
+            double lat1Radians = (Math.PI / 180) * (lat1);
+            double lat2Radians = (Math.PI / 180) * (lat2);
 
             double a = Math.Pow(Math.Sin(dLat / 2), 2) + 
                        Math.Pow(Math.Sin(dLon / 2), 2) * 
-                       Math.Cos(lat1) * Math.Cos(lat2);
+                       Math.Cos(lat1Radians) * Math.Cos(lat2Radians);
             
             double rad = 6371;
             double c = 2 * Math.Asin(Math.Sqrt(a));

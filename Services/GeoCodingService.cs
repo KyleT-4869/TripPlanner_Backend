@@ -1,3 +1,4 @@
+using System.Text.Json;
 using TripPlanner.DTO;
 
 namespace TripPlanner.Services;
@@ -24,8 +25,13 @@ public class GeoCodingService
             response.EnsureSuccessStatusCode();
 
             List<GeoCodingData>? listGeoCodingData = await response.Content.ReadFromJsonAsync<List<GeoCodingData>>();
-            GeoCodingData GeoCodingData = listGeoCodingData![0];
 
+            if(listGeoCodingData == null || listGeoCodingData.Count == 0)
+            {
+                return null;
+            }
+
+            GeoCodingData GeoCodingData = listGeoCodingData[0];
             return GeoCodingData;
         } 
         catch(HttpRequestException e)
@@ -33,6 +39,10 @@ public class GeoCodingService
             Console.WriteLine(e.Message);
             return null;
         }
+        catch(JsonException e)
+        {
+            Console.WriteLine(e.Message);
+            return null;
+        }
     }
-
 }
